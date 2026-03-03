@@ -11,7 +11,7 @@ class BlobTracker:
     def __init__(self):
         # Configuration properties
         self.camera_id = "IR"
-        self.blob_threshold = 200
+        self.threshold_range = [200, 255]
         self.min_blob_size = 5
         self.bounding_box = [0.1, 0.0, 0.6, 1.0] # [x_min, y_min, x_max, y_max]
         self.show_bounds = True
@@ -86,7 +86,7 @@ class BlobTracker:
     def get_config(self):
         return {
             "camera_id": self.camera_id,
-            "blob_threshold": self.blob_threshold,
+            "threshold_range": self.threshold_range,
             "min_blob_size": self.min_blob_size,
             "bounding_box": self.bounding_box,
             "show_bounds": self.show_bounds,
@@ -172,7 +172,7 @@ class BlobTracker:
             gray = cv2.bitwise_and(gray, mask)
 
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(gray)
-        _, thresh = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+        thresh = cv2.inRange(gray, threshold[0], threshold[1])
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         brightest_blob = None
@@ -189,7 +189,7 @@ class BlobTracker:
                 cy = int(M["m01"] / M["m00"])
                 return (cx, cy, max_val, cv2.contourArea(brightest_blob), brightest_blob)
 
-        return (max_loc[0], max_loc[1], max_val, 1, None) if max_val >= threshold else None
+        return (max_loc[0], max_loc[1], max_val, 1, None) if threshold[0] <= max_val <= threshold[1] else None
 
     def _draw_tracking_overlay(self, image, tracking_data, is_active=True, accel=0.0):
         if tracking_data is None:
@@ -317,7 +317,7 @@ class BlobTracker:
             prev_time = now
             
             img = np.zeros((1024, 1280, 3), dtype=np.uint8)
-            cv2.putText(img, self.status_msg, (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
             
             # Create a moving bright spot for testing
             cx = int(1280/2 + 500 * np.sin(now))
@@ -340,7 +340,7 @@ class BlobTracker:
         if self.show_bounds:
             self._draw_bounds_overlay(img_output, self.bounding_box)
 
-        tracking_data = self._find_brightest_blob(img_processed, self.blob_threshold, self.min_blob_size, bounds=self.bounding_box)
+        tracking_data = self._find_brightest_blob(img_processed, self.threshold_range, self.min_blob_size, bounds=self.bounding_box)
 
         if tracking_data:
             x, y, brightness, area, _ = tracking_data

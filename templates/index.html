@@ -12,6 +12,7 @@
             --bg-color: #0f172a;
             --surface-color: #262a3b;
             --surface-light: #12192c;
+            --bg-color-dark: #030407;
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
             --primary: #3b82f6;
@@ -155,7 +156,7 @@
         .video-container {
             flex: 1;
             position: relative;
-            background-color: #000;
+            background-color: var( --bg-color-dark);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
@@ -175,7 +176,7 @@
             position: absolute;
             top: 1rem;
             right: 1rem;
-            background-color: rgba(0, 0, 0, 0.6);
+            background-color:  var( --bg-color);
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-variant-numeric: tabular-nums;
@@ -245,6 +246,79 @@
         }
 
         /* Inputs */
+        .range-slider-container {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            margin: 1rem 0;
+            background: var(--surface-color);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+        }
+
+        .range-slider-container input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            top: 0;
+            pointer-events: none;
+            -webkit-appearance: none;
+            appearance: none;
+            outline: none;
+            background: none;
+            border-radius: 3px;
+        }
+
+        .range-slider-container input[type="range"]::-webkit-slider-thumb {
+            pointer-events: auto;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+            margin-top: -5px;
+        }
+
+        .range-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: var(--primary-hover);
+        }
+
+        .range-slider-container input[type="range"]::-moz-range-thumb {
+            pointer-events: auto;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            transition: transform 0.1s;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+            margin-top: -5px;
+        }
+
+        .range-slider-container input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            background: var(--primary-hover);
+        }
+
+        .range-slider-container input[type="range"]::-webkit-slider-runnable-track {
+            background: none;
+            border: none;
+            height: 6px;
+            border-radius: 3px;
+        }
+
+        .range-slider-container input[type="range"]::-moz-range-track {
+            background: none;
+            border: none;
+        }
+
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -355,7 +429,7 @@
 
         .bb-label-sm {
             font-size: 0.75rem;
-            text-transform: uppercase;
+            /* text-transform: uppercase; */
             letter-spacing: 0.5px;
             margin-bottom: 4px;
         }
@@ -458,15 +532,19 @@
             </div>
 
             <div class="panel-section">
-                <h2>Image Processing</h2>
+                <h2>Blob Tracking</h2>
 
                 <div class="form-group">
-                    <label for="blob_threshold">
-                        Blob Threshold
-                        <span class="value-display" id="val_blob_threshold">200</span>
+                    <label>
+                        Blob Threshold Range
+                        <span class="value-display"><span id="val_threshold_min">200</span> - <span id="val_threshold_max">255</span></span>
                     </label>
-                    <input type="range" id="blob_threshold" min="0" max="255" value="200"
-                        oninput="updateConfig('blob_threshold', this.value)">
+                    <div class="range-slider-container">
+                        <input type="range" id="threshold_min" class="range-slider" min="0" max="255" value="200"
+                            oninput="updateThresholdRange('min', this.value)">
+                        <input type="range" id="threshold_max" class="range-slider" min="0" max="255" value="255"
+                            oninput="updateThresholdRange('max', this.value)">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -478,12 +556,21 @@
                         oninput="updateConfig('min_blob_size', this.value)">
                 </div>
 
-                <div class="form-group">
+                <div class="toggle-group">
+                    <label for="prefilter_enabled" style="font-size: 1rem; color: var(--text-color);">Enable
+                        Prefilter</label>
+                    <label class="switch">
+                        <input type="checkbox" id="prefilter_enabled" onchange="togglePrefilter(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group" id="prefilter_threshold_group" style="transition: opacity 0.3s;">
                     <label for="preprocess_threshold">
-                        Prefilter Threshold (0 = Off)
+                        Prefilter Threshold
                         <span class="value-display" id="val_preprocess_threshold">20</span>
                     </label>
-                    <input type="range" id="preprocess_threshold" min="0" max="255" value="20"
+                    <input type="range" id="preprocess_threshold" min="1" max="255" value="20"
                         oninput="updateConfig('preprocess_threshold', this.value)">
                 </div>
             </div>
@@ -501,7 +588,7 @@
                     </label>
                 </div>
 
-                <label style="margin-top: 5px;">Bounding Box (Normalized 0-1)</label>
+                <label style="margin-bottom: 10px;">Bounding Box</label>
                 <div class="bb-inputs">
                     <div class="form-group">
                         <label class="bb-label-sm">X Min</label>
@@ -624,9 +711,19 @@
                 }
 
                 // Update simple inputs
-                updateUIElement('blob_threshold', config.blob_threshold);
+                if (config.threshold_range && Array.isArray(config.threshold_range)) {
+                    document.getElementById('threshold_min').value = config.threshold_range[0];
+                    document.getElementById('threshold_max').value = config.threshold_range[1];
+                    document.getElementById('val_threshold_min').innerText = config.threshold_range[0];
+                    document.getElementById('val_threshold_max').innerText = config.threshold_range[1];
+                    updateRangeSliderTrack();
+                }
                 updateUIElement('min_blob_size', config.min_blob_size);
-                updateUIElement('preprocess_threshold', config.preprocess_threshold || 0);
+                const prefilterVal = config.preprocess_threshold;
+                const isPrefilterEnabled = prefilterVal !== null && prefilterVal !== undefined && prefilterVal > 0;
+                document.getElementById('prefilter_enabled').checked = isPrefilterEnabled;
+                document.getElementById('prefilter_threshold_group').style.opacity = isPrefilterEnabled ? '1' : '0.4';
+                updateUIElement('preprocess_threshold', isPrefilterEnabled ? prefilterVal : 20);
                 updateUIElement('smoothing_alpha', config.smoothing_alpha);
 
                 // Update checkboxes
@@ -669,6 +766,48 @@
             sendUpdate({ bounding_box: [xmin, ymin, xmax, ymax] });
         }
 
+        // Update threshold range (min/max)
+        function updateThresholdRange(type, value) {
+            const min = parseInt(document.getElementById('threshold_min').value);
+            const max = parseInt(document.getElementById('threshold_max').value);
+
+            // Ensure min doesn't exceed max and vice versa
+            if (type === 'min' && parseInt(value) > max) {
+                document.getElementById('threshold_min').value = max;
+                return;
+            }
+            if (type === 'max' && parseInt(value) < min) {
+                document.getElementById('threshold_max').value = min;
+                return;
+            }
+
+            // Update display values immediately
+            document.getElementById('val_threshold_min').innerText = min;
+            document.getElementById('val_threshold_max').innerText = max;
+
+            // Update track appearance
+            updateRangeSliderTrack();
+
+            // Debounce the actual API call
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                sendUpdate({ threshold_range: [min, max] });
+            }, 100);
+        }
+
+        // Update the visual gradient of the range slider to highlight selected range
+        function updateRangeSliderTrack() {
+            const min = parseInt(document.getElementById('threshold_min').value);
+            const max = parseInt(document.getElementById('threshold_max').value);
+            const minPercent = (min / 255) * 100;
+            const maxPercent = (max / 255) * 100;
+
+            const container = document.querySelector('.range-slider-container');
+
+            // Update container background gradient to highlight the range between min and max
+            container.style.background = `linear-gradient(to right, var(--surface-color) 0%, var(--surface-color) ${minPercent}%, var(--primary) ${minPercent}%, var(--primary) ${maxPercent}%, var(--surface-color) ${maxPercent}%, var(--surface-color) 100%)`;
+        }
+
         // Generic configuration update handler (with debounce for sliders)
         function updateConfig(key, value) {
             // Update display value immediately for responsiveness
@@ -679,14 +818,20 @@
             clearTimeout(updateTimer);
             updateTimer = setTimeout(() => {
                 let payload = {};
-                if (key === 'preprocess_threshold') {
-                    // special handling to send None or integer
-                    payload[key] = value == 0 ? null : parseInt(value);
-                } else {
-                    payload[key] = value;
-                }
+                payload[key] = value;
                 sendUpdate(payload);
             }, 100);
+        }
+
+        // Toggle Prefilter
+        function togglePrefilter(enabled) {
+            const thresholdEl = document.getElementById('preprocess_threshold');
+            const thresholdGroup = document.getElementById('prefilter_threshold_group');
+
+            thresholdGroup.style.opacity = enabled ? '1' : '0.4';
+
+            const value = enabled ? parseInt(thresholdEl.value) : null;
+            sendUpdate({ preprocess_threshold: value });
         }
 
         // Send changes to server

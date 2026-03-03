@@ -39,8 +39,12 @@ def set_config():
     # E.g. converting strings to ints
     parsed_config = {}
     
-    if 'blob_threshold' in new_config:
-        parsed_config['blob_threshold'] = int(new_config['blob_threshold'])
+    if 'threshold_range' in new_config:
+        try:
+            tr = new_config['threshold_range']
+            parsed_config['threshold_range'] = [int(tr[0]), int(tr[1])]
+        except (ValueError, TypeError, IndexError):
+            pass
     if 'min_blob_size' in new_config:
         parsed_config['min_blob_size'] = int(new_config['min_blob_size'])
     if 'preprocess_threshold' in new_config:

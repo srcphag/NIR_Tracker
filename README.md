@@ -2,6 +2,13 @@
 
 This project includes startup scripts to automatically create a Python virtual environment, install the necessary dependencies, and start the server.
 
+## Installation
+Install Python 3.14.3 on the system path.
+https://www.python.org/downloads/release/python-3143/
+
+Install last version of Baser Pylon SDK
+https://www.baslerweb.com/en/downloads/software/?downloadCategory.values.label.data=pylon
+
 ### Windows (Recommended)
 Simply double-click `run.bat` or run it from the command line:
 ```cmd
