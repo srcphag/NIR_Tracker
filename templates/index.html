@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIR Tracker</title>
+    <!-- Use Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #262a3b;
+            --surface-light: #12192c;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --danger: #ef4444;
+            --border-color: #334155;
+            --font-main: 'Inter', sans-serif;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            /* background-color: var(--bg-color); */
+            background: radial-gradient(circle at center, #1e293b 0%, var(--bg-color) 100%);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .stream-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            position: relative;
+            /* background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); */
+        }
+
+        .config-sidebar {
+            width: 400px;
+            /* background-color: var(--surface-light); */
+            /* border-left: 1px solid var(--border-color); */
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+            /* box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3); */
+            z-index: 10;
+        }
+
+        /* Stream area */
+        .header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #e0e0e0, #e0e0e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header h1 span {
+            font-weight: 100;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #60a5fa;
+            box-shadow: 0 0 8px #60a5fa;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .btn-reconnect {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: var(--font-main);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-reconnect:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-reconnect:active {
+            transform: scale(0.98);
+        }
+
+        /* Video Area */
+        .video-container {
+            flex: 1;
+            position: relative;
+            background-color: #000;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-stream {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            letter-spacing: 1px;
+            backdrop-filter: blur(4px);
+            z-index: 10;
+        }
+
+        /* Sidebar Panels */
+        .panel-section {
+            background-color: var(--surface-light);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .value-display {
+            font-family: monospace;
+            background-color: var(--surface-color);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            color: var(--primary-hover);
+            font-size: 0.85rem;
+        }
+
+        /* Inputs */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--surface-color);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: var(--primary-hover);
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-muted);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        input:checked+.slider:before {
+            background-color: white;
+            transform: translateX(20px);
+        }
+
+        /* Bounding Box Info */
+        .bb-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .bb-label-sm {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .stream-section {
+                height: 60vh;
+                flex: none;
+            }
+
+            .config-sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+        }
+
+        /* Loading Overlay overlay */
+        #loader {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            transition: opacity 0.5s;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <!-- Main Video Stream -->
+        <div class="stream-section">
+            <div class="header">
+                <h1>NIR Tracker <span>Configuration</span></h1>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn-reconnect" onclick="reconnectCamera()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                        Reconnect Camera
+                    </button>
+                    <div class="status-badge" id="camera-status">
+                        <div class="status-indicator"></div>
+                        Connecting...
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <div class="video-overlay" id="fps-counter">FPS: --</div>
+                <img src="/video_feed" alt="Video Stream" class="video-stream" id="video-stream"
+                    onerror="this.onerror=null; this.src=''; this.alt='Stream unavailable'; document.getElementById('camera-status').innerHTML = 'Stream Offline'; document.getElementById('camera-status').style.color = 'var(--danger)';">
+            </div>
+        </div>
+
+        <!-- Configuration Sidebar -->
+        <div class="config-sidebar">
+
+            <div class="panel-section"
+                style="padding: 1rem; border-color: var(--primary); background-color: rgba(59, 130, 246, 0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 500; color: var(--text-muted);">Current Tracked Brightness</span>
+                    <span id="tracked-brightness"
+                        style="font-size: 1.5rem; font-weight: 700; color: var(--primary-hover); font-variant-numeric: tabular-nums;">--</span>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h2>Image Processing</h2>
+
+                <div class="form-group">
+                    <label for="blob_threshold">
+                        Blob Threshold
+                        <span class="value-display" id="val_blob_threshold">200</span>
+                    </label>
+                    <input type="range" id="blob_threshold" min="0" max="255" value="200"
+                        oninput="updateConfig('blob_threshold', this.value)">
+                </div>
+
+                <div class="form-group">
+                    <label for="min_blob_size">
+                        Min Blob Size (px)
+                        <span class="value-display" id="val_min_blob_size">5</span>
+                    </label>
+                    <input type="range" id="min_blob_size" min="1" max="100" value="5"
+                        oninput="updateConfig('min_blob_size', this.value)">
+                </div>
+
+                <div class="form-group">
+                    <label for="preprocess_threshold">
+                        Prefilter Threshold (0 = Off)
+                        <span class="value-display" id="val_preprocess_threshold">20</span>
+                    </label>
+                    <input type="range" id="preprocess_threshold" min="0" max="255" value="20"
+                        oninput="updateConfig('preprocess_threshold', this.value)">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h2>Active Zone</h2>
+
+                <div class="toggle-group">
+                    <label for="show_bounds" style="font-size: 1rem; color: var(--text-color);">Show Bounds
+                        Overlay</label>
+                    <label class="switch">
+                        <input type="checkbox" id="show_bounds" checked
+                            onchange="updateConfig('show_bounds', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <label style="margin-top: 5px;">Bounding Box (Normalized 0-1)</label>
+                <div class="bb-inputs">
+                    <div class="form-group">
+                        <label class="bb-label-sm">X Min</label>
+                        <input type="number" id="bb_xmin" step="0.05" min="0" max="1" value="0.1"
+                            onchange="updateBoundingBox()">
+                    </div>
+                    <div class="form-group">
+                        <label class="bb-label-sm">Y Min</label>
+                        <input type="number" id="bb_ymin" step="0.05" min="0" max="1" value="0.0"
+                            onchange="updateBoundingBox()">
+                    </div>
+                    <div class="form-group">
+                        <label class="bb-label-sm">X Max</label>
+                        <input type="number" id="bb_xmax" step="0.05" min="0" max="1" value="0.6"
+                            onchange="updateBoundingBox()">
+                    </div>
+                    <div class="form-group">
+                        <label class="bb-label-sm">Y Max</label>
+                        <input type="number" id="bb_ymax" step="0.05" min="0" max="1" value="1.0"
+                            onchange="updateBoundingBox()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h2>Dynamics</h2>
+
+                <div class="form-group">
+                    <label for="smoothing_alpha">
+                        Accel Smoothing (Alpha)
+                        <span class="value-display" id="val_smoothing_alpha">0.05</span>
+                    </label>
+                    <input type="range" id="smoothing_alpha" min="0.01" max="1.0" step="0.01" value="0.05"
+                        oninput="updateConfig('smoothing_alpha', this.value)">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h2>OSC Output</h2>
+
+                <div class="toggle-group">
+                    <label for="osc_enabled" style="font-size: 1rem; color: var(--text-color);">Enable OSC</label>
+                    <label class="switch">
+                        <input type="checkbox" id="osc_enabled" checked
+                            onchange="updateConfig('osc_enabled', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="osc_ip">IP Address</label>
+                        <input type="text" id="osc_ip" value="192.168.0.100"
+                            onchange="updateConfig('osc_ip', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label for="osc_port">Port</label>
+                        <input type="number" id="osc_port" value="9000" onchange="updateConfig('osc_port', this.value)">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Track time to calculate FPS
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fpsInterval;
+
+        // Debounce timer for API calls
+        let updateTimer;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchConfig();
+
+            // Remove the continuous onload handler since it doesn't trigger for MJPEG multipart streams on all browsers
+
+            fpsInterval = setInterval(() => {
+                const now = performance.now();
+                const delta = (now - lastFrameTime) / 1000;
+                // As a fallback, since we can't reliably count JS image updates for MJPEG, 
+                // we'll leave it as an indicator or hide it if it's too difficult. 
+                // Let's actually remove it from the UI or fetch real FPS from the backend.
+            }, 1000);
+
+            // Periodically ping status
+            setInterval(fetchConfig, 5000);
+        });
+
+        // Sync UI with current server state
+        async function fetchConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+
+                // Set loading off
+                const loader = document.getElementById('loader');
+                if (loader.style.opacity !== '0') {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+
+                // Update Status
+                const statusBadge = document.getElementById('camera-status');
+                statusBadge.innerHTML = `<div class="status-indicator"></div> ${config.status_msg || 'Connected'}`;
+
+                // Update Brightness
+                const brightnessEl = document.getElementById('tracked-brightness');
+                if (brightnessEl && config.current_brightness !== undefined) {
+                    brightnessEl.innerText = config.current_brightness.toFixed(1);
+                }
+
+                // Update FPS
+                const fpsEl = document.getElementById('fps-counter');
+                if (fpsEl && config.fps !== undefined) {
+                    fpsEl.innerText = `FPS: ${config.fps}`;
+                }
+
+                // Update simple inputs
+                updateUIElement('blob_threshold', config.blob_threshold);
+                updateUIElement('min_blob_size', config.min_blob_size);
+                updateUIElement('preprocess_threshold', config.preprocess_threshold || 0);
+                updateUIElement('smoothing_alpha', config.smoothing_alpha);
+
+                // Update checkboxes
+                document.getElementById('show_bounds').checked = config.show_bounds;
+                document.getElementById('osc_enabled').checked = config.osc_enabled;
+
+                // Update text/number fields
+                document.getElementById('osc_ip').value = config.osc_ip;
+                document.getElementById('osc_port').value = config.osc_port;
+
+                // Update bounding box
+                if (config.bounding_box && config.bounding_box.length === 4) {
+                    document.getElementById('bb_xmin').value = config.bounding_box[0];
+                    document.getElementById('bb_ymin').value = config.bounding_box[1];
+                    document.getElementById('bb_xmax').value = config.bounding_box[2];
+                    document.getElementById('bb_ymax').value = config.bounding_box[3];
+                }
+
+            } catch (err) {
+                console.error("Failed to fetch config:", err);
+            }
+        }
+
+        function updateUIElement(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = value;
+                const display = document.getElementById(`val_${id}`);
+                if (display) display.innerText = value;
+            }
+        }
+
+        // Handle Bounding Box update
+        function updateBoundingBox() {
+            const xmin = parseFloat(document.getElementById('bb_xmin').value);
+            const ymin = parseFloat(document.getElementById('bb_ymin').value);
+            const xmax = parseFloat(document.getElementById('bb_xmax').value);
+            const ymax = parseFloat(document.getElementById('bb_ymax').value);
+
+            sendUpdate({ bounding_box: [xmin, ymin, xmax, ymax] });
+        }
+
+        // Generic configuration update handler (with debounce for sliders)
+        function updateConfig(key, value) {
+            // Update display value immediately for responsiveness
+            const display = document.getElementById(`val_${key}`);
+            if (display) display.innerText = value;
+
+            // Debounce the actual API call
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                let payload = {};
+                if (key === 'preprocess_threshold') {
+                    // special handling to send None or integer
+                    payload[key] = value == 0 ? null : parseInt(value);
+                } else {
+                    payload[key] = value;
+                }
+                sendUpdate(payload);
+            }, 100);
+        }
+
+        // Send changes to server
+        async function sendUpdate(payload) {
+            try {
+                await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.error("Failed to update config:", err);
+            }
+        }
+
+        // Trigger manual camera reconnect
+        async function reconnectCamera() {
+            const btn = document.querySelector('.btn-reconnect');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Connecting...';
+            btn.disabled = true;
+
+            try {
+                await fetch('/api/reconnect', { method: 'POST' });
+                // Force a fast config check to update status
+                setTimeout(fetchConfig, 1000);
+            } catch (err) {
+                console.error("Failed to trigger reconnect:", err);
+            } finally {
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+
+</html>

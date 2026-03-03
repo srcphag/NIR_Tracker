@@ -1,0 +1,5 @@
+Flask
+pypylon
+opencv-python
+numpy
+python-osc

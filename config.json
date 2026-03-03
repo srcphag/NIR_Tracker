@@ -1,0 +1,21 @@
+{
+    "camera_id": "IR",
+    "blob_threshold": 150,
+    "min_blob_size": 31,
+    "bounding_box": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+    ],
+    "show_bounds": true,
+    "preprocess_threshold": null,
+    "smoothing_alpha": 0.6,
+    "osc_enabled": true,
+    "osc_ip": "127.0.0.1",
+    "osc_port": 9001,
+    "osc_address": "/point",
+    "status_msg": "Camera connected and grabbing.",
+    "current_brightness": 255.0,
+    "fps": 68.0
+}
