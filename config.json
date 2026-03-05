@@ -1,10 +1,10 @@
 {
     "camera_id": "IR",
     "threshold_range": [
-        150,
+        28,
         255
     ],
-    "min_blob_size": 31,
+    "min_blob_size": 334,
     "bounding_box": [
         0.15,
         0.15,
@@ -13,7 +13,7 @@
     ],
     "show_bounds": true,
     "preprocess_threshold": null,
-    "smoothing_alpha": 0.6,
+    "smoothing_alpha": 0.04,
     "osc_enabled": true,
     "osc_ip": "127.0.0.1",
     "osc_port": 9001,

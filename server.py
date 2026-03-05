@@ -1,6 +1,19 @@
 from flask import Flask, render_template, Response, jsonify, request
 import time
+import logging
 from tracker import BlobTracker
+
+# Custom logging filter to suppress specific endpoints
+class SilentEndpointFilter(logging.Filter):
+    def filter(self, record):
+        # Suppress logging for these endpoints
+        silent_endpoints = ['/api/tracking', '/video_feed', '/api/config']
+        return not any(endpoint in record.getMessage() for endpoint in silent_endpoints)
+
+# Configure logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.INFO)
+log.addFilter(SilentEndpointFilter())
 
 app = Flask(__name__)
 tracker = BlobTracker()
@@ -80,6 +93,19 @@ def reconnect_camera():
     tracker.trigger_reconnect()
     return jsonify({"status": "success", "message": "Reconnection triggered"})
 
+
+@app.route('/api/tracking', methods=['GET'])
+def get_tracking():
+    """Returns real-time tracking data (brightness, fps, position, acceleration, area)."""
+    return jsonify({
+        "current_brightness": tracker.current_brightness,
+        "current_x": round(tracker.current_x, 4),
+        "current_y": round(tracker.current_y, 4),
+        "current_area": round(tracker.current_area, 1),
+        "smoothed_accel": round(tracker.smoothed_accel, 4),
+        "fps": round(tracker.fps, 1),
+        "status_msg": tracker.status_msg
+    })
 
 if __name__ == '__main__':
     try:

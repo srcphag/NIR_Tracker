@@ -4,6 +4,17 @@
 - Connect the camera with a Cat6 RJ45 Cable to the PoE injector OUT
 - Connect the PC with a Cat6 RJ45 Cable to the PoE injector IN
 
+## Install Software Requisites
+
+1. **Download Python 3.14.3**
+   - Visit: [Python Downloads](https://www.python.org/downloads/release/python-3143/)
+   - Add to system PATH during installation
+
+2. **Download Basler Pylon SDK**
+   - Visit: [Basler Downloads](https://www.baslerweb.com/en/downloads/software/?downloadCategory.values.label.data=pylon)
+   - Install to default location
+   - Restart computer after installation
+
 ## Setup the Network
 The camera has a fixed IP setted. To be able to communicate with the camera you must set-up the network card attached to the camera on an IP in the same range as the setted on the camera.
 
@@ -18,16 +29,10 @@ The camera has a fixed IP setted. To be able to communicate with the camera you 
     * **Gateway:** Leave empty
 5. Save and close
 
-## Install Software Requisites
 
-1. **Download Python 3.14.3**
-   - Visit: https://www.python.org/downloads/release/python-3143/
-   - Add to system PATH during installation
-
-2. **Download Basler Pylon SDK**
-   - Visit: https://www.baslerweb.com/en/downloads/software/?downloadCategory.values.label.data=pylon
-   - Install to default location
-   - Restart computer after installation
+## Download the project
+1. Download the most recent version of the project from here: [NIR_Tracker Releases](https://github.com/srcphag/NIR_Tracker/releases)
+2. Extract the files on your system
 
 ## Software Quick Start
 

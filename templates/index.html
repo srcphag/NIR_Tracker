@@ -174,6 +174,7 @@
 
         .video-overlay {
             position: absolute;
+            mix-blend-mode: screen;
             top: 1rem;
             right: 1rem;
             background-color:  var( --bg-color);
@@ -185,7 +186,19 @@
             backdrop-filter: blur(4px);
             z-index: 10;
         }
+        .video-overlay#tracking-overlay {
+           right: unset;
+           left: 1rem;
 
+        }
+        .video-overlay#tracking-overlay div{
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+        .video-overlay#tracking-overlay span{
+            font-weight: 200;
+        }
         /* Sidebar Panels */
         .panel-section {
             background-color: var(--surface-light);
@@ -514,6 +527,12 @@
 
             <div class="video-container">
                 <div class="video-overlay" id="fps-counter">FPS: --</div>
+                <div class="video-overlay" id="tracking-overlay" >
+                    <div>Position X: <span id="tracking-x">--</span></div>
+                    <div>Position Y: <span id="tracking-y">--</span></div>
+                    <div>Acceleration: <span id="tracking-accel">--</span></div>
+                    <div>Blob Size: <span id="tracking-area">--</span></div>
+                </div>
                 <img src="/video_feed" alt="Video Stream" class="video-stream" id="video-stream"
                     onerror="this.onerror=null; this.src=''; this.alt='Stream unavailable'; document.getElementById('camera-status').innerHTML = 'Stream Offline'; document.getElementById('camera-status').style.color = 'var(--danger)';">
             </div>
@@ -522,10 +541,10 @@
         <!-- Configuration Sidebar -->
         <div class="config-sidebar">
 
-            <div class="panel-section"
+            <div class="panel-section" id="brightness-panel"
                 style="padding: 1rem; border-color: var(--primary); background-color: rgba(59, 130, 246, 0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 500; color: var(--text-muted);">Current Tracked Brightness</span>
+                    <span style="font-weight: 500; color: var(--text-color);">Tracked Brightness</span>
                     <span id="tracked-brightness"
                         style="font-size: 1.5rem; font-weight: 700; color: var(--primary-hover); font-variant-numeric: tabular-nums;">--</span>
                 </div>
@@ -549,10 +568,10 @@
 
                 <div class="form-group">
                     <label for="min_blob_size">
-                        Min Blob Size (px)
+                        Min Blob Size (px²)
                         <span class="value-display" id="val_min_blob_size">5</span>
                     </label>
-                    <input type="range" id="min_blob_size" min="1" max="100" value="5"
+                    <input type="range" id="min_blob_size" min="1" max="30000" value="5"
                         oninput="updateConfig('min_blob_size', this.value)">
                 </div>
 
@@ -665,7 +684,7 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            fetchConfig();
+            fetchConfig(); // Load config once on startup
 
             // Remove the continuous onload handler since it doesn't trigger for MJPEG multipart streams on all browsers
 
@@ -677,8 +696,8 @@
                 // Let's actually remove it from the UI or fetch real FPS from the backend.
             }, 1000);
 
-            // Periodically ping status
-            setInterval(fetchConfig, 5000);
+            // Periodically fetch tracking data for real-time updates (brightness, fps)
+            setInterval(fetchTracking, 100);
         });
 
         // Sync UI with current server state
@@ -697,18 +716,6 @@
                 // Update Status
                 const statusBadge = document.getElementById('camera-status');
                 statusBadge.innerHTML = `<div class="status-indicator"></div> ${config.status_msg || 'Connected'}`;
-
-                // Update Brightness
-                const brightnessEl = document.getElementById('tracked-brightness');
-                if (brightnessEl && config.current_brightness !== undefined) {
-                    brightnessEl.innerText = config.current_brightness.toFixed(1);
-                }
-
-                // Update FPS
-                const fpsEl = document.getElementById('fps-counter');
-                if (fpsEl && config.fps !== undefined) {
-                    fpsEl.innerText = `FPS: ${config.fps}`;
-                }
 
                 // Update simple inputs
                 if (config.threshold_range && Array.isArray(config.threshold_range)) {
@@ -865,6 +872,59 @@
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }, 2000);
+            }
+        }
+
+        async function fetchTracking() {
+            try {
+                const response = await fetch('/api/tracking');
+                const data = await response.json();
+                
+                const brightnessEl = document.getElementById('tracked-brightness');
+                const brightnessPanel = document.getElementById('brightness-panel');
+                if (brightnessEl && data.current_brightness !== undefined) {
+
+                    brightnessEl.innerText = data.current_brightness.toFixed(1);
+
+                    // Change color to red when no tracking (brightness = 0)
+                    if (data.current_brightness === 0) {
+                        brightnessEl.style.color = '#ef4444'; // red
+                        brightnessPanel.style.borderColor = '#ef4444';
+                        brightnessPanel.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                    } else {
+                        brightnessEl.style.color = 'var(--primary-hover)'; // blue
+                        brightnessPanel.style.borderColor = 'var(--primary)';
+                        brightnessPanel.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                    }
+                }
+                
+                // Update tracking overlay (X, Y, Acceleration)
+                const trackingXEl = document.getElementById('tracking-x');
+                if (trackingXEl && data.current_x !== undefined) {
+                    trackingXEl.innerText = data.current_x.toFixed(3);
+                }
+                
+                const trackingYEl = document.getElementById('tracking-y');
+                if (trackingYEl && data.current_y !== undefined) {
+                    trackingYEl.innerText = data.current_y.toFixed(3);
+                }
+                
+                const trackingAccelEl = document.getElementById('tracking-accel');
+                if (trackingAccelEl && data.smoothed_accel !== undefined) {
+                    trackingAccelEl.innerText = data.smoothed_accel.toFixed(3);
+                }
+                
+                const trackingAreaEl = document.getElementById('tracking-area');
+                if (trackingAreaEl && data.current_area !== undefined) {
+                    trackingAreaEl.innerText = data.current_area.toFixed(0);
+                }
+                
+                const fpsEl = document.getElementById('fps-value');
+                if (fpsEl && data.fps !== undefined) {
+                    fpsEl.innerText = data.fps;
+                }
+            } catch (err) {
+                console.error("Failed to fetch tracking data:", err);
             }
         }
     </script>
