@@ -526,7 +526,9 @@
             </div>
 
             <div class="video-container">
-                <div class="video-overlay" id="fps-counter">FPS: --</div>
+                <div class="video-overlay" id="fps-value">
+                    <div>FPS: <span id="fps">--</span></div>
+                </div>
                 <div class="video-overlay" id="tracking-overlay" >
                     <div>Position X: <span id="tracking-x">--</span></div>
                     <div>Position Y: <span id="tracking-y">--</span></div>
@@ -919,9 +921,10 @@
                     trackingAreaEl.innerText = data.current_area.toFixed(0);
                 }
                 
-                const fpsEl = document.getElementById('fps-value');
+                const fpsEl = document.getElementById('fps');
                 if (fpsEl && data.fps !== undefined) {
                     fpsEl.innerText = data.fps;
+                    
                 }
             } catch (err) {
                 console.error("Failed to fetch tracking data:", err);

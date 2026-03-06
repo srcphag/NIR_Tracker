@@ -1,10 +1,10 @@
 {
     "camera_id": "IR",
     "threshold_range": [
-        28,
+        175,
         255
     ],
-    "min_blob_size": 334,
+    "min_blob_size": 112,
     "bounding_box": [
         0.15,
         0.15,
@@ -18,7 +18,7 @@
     "osc_ip": "127.0.0.1",
     "osc_port": 9001,
     "osc_address": "/point",
-    "status_msg": "Camera 'IR' not found. Check connection.",
-    "current_brightness": 255.0,
-    "fps": 0.0
+    "status_msg": "Camera connected and grabbing.",
+    "current_brightness": 0.0,
+    "fps": 68.0
 }
