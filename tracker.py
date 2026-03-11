@@ -391,7 +391,6 @@ class BlobTracker:
                     pass # Ignore OSC errors to not crash the tracking loop
 
         else:
-
             self.prev_vel, self.smoothed_accel = (0.0, 0.0), 0.0
             self.prev_vel = (0.0, 0.0)
             self.current_brightness = 0.0
@@ -408,7 +407,7 @@ class BlobTracker:
                 except Exception as e:
                     pass # Ignore OSC errors to not crash the tracking loop
             
-            self.prev_pos = None
+            #self.prev_pos = None
         
         # Encode to JPEG for HTTP stream
         ret, buffer = cv2.imencode('.jpg', img_output)

@@ -6,9 +6,9 @@
     ],
     "min_blob_size": 112,
     "bounding_box": [
+        0.3,
         0.15,
-        0.15,
-        0.85,
+        0.75,
         0.85
     ],
     "invert_bounds": true,
@@ -20,6 +20,6 @@
     "osc_port": 9001,
     "osc_address": "/point",
     "status_msg": "Camera 'IR' not found. Check connection.",
-    "current_brightness": 0.0,
+    "current_brightness": 255.0,
     "fps": 0.0
 }
