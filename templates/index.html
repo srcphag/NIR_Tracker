@@ -156,7 +156,7 @@
         .video-container {
             flex: 1;
             position: relative;
-            background-color: var( --bg-color-dark);
+            background-color: var(--bg-color-dark);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
@@ -177,7 +177,7 @@
             mix-blend-mode: screen;
             top: 1rem;
             right: 1rem;
-            background-color:  var( --bg-color);
+            background-color: var(--bg-color);
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-variant-numeric: tabular-nums;
@@ -186,19 +186,23 @@
             backdrop-filter: blur(4px);
             z-index: 10;
         }
+
         .video-overlay#tracking-overlay {
-           right: unset;
-           left: 1rem;
+            right: unset;
+            left: 1rem;
 
         }
-        .video-overlay#tracking-overlay div{
+
+        .video-overlay#tracking-overlay div {
             display: flex;
             justify-content: space-between;
             gap: 2rem;
         }
-        .video-overlay#tracking-overlay span{
+
+        .video-overlay#tracking-overlay span {
             font-weight: 200;
         }
+
         /* Sidebar Panels */
         .panel-section {
             background-color: var(--surface-light);
@@ -529,7 +533,7 @@
                 <div class="video-overlay" id="fps-value">
                     <div>FPS: <span id="fps">--</span></div>
                 </div>
-                <div class="video-overlay" id="tracking-overlay" >
+                <div class="video-overlay" id="tracking-overlay">
                     <div>Position X: <span id="tracking-x">--</span></div>
                     <div>Position Y: <span id="tracking-y">--</span></div>
                     <div>Acceleration: <span id="tracking-accel">--</span></div>
@@ -558,7 +562,8 @@
                 <div class="form-group">
                     <label>
                         Blob Threshold Range
-                        <span class="value-display"><span id="val_threshold_min">200</span> - <span id="val_threshold_max">255</span></span>
+                        <span class="value-display"><span id="val_threshold_min">200</span> - <span
+                                id="val_threshold_max">255</span></span>
                     </label>
                     <div class="range-slider-container">
                         <input type="range" id="threshold_min" class="range-slider" min="0" max="255" value="200"
@@ -605,6 +610,16 @@
                     <label class="switch">
                         <input type="checkbox" id="show_bounds" checked
                             onchange="updateConfig('show_bounds', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-group">
+                    <label for="invert_bounds" style="font-size: 1rem; color: var(--text-color);">Track Outside
+                        Bounds</label>
+                    <label class="switch">
+                        <input type="checkbox" id="invert_bounds"
+                            onchange="updateConfig('invert_bounds', this.checked)">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -737,6 +752,7 @@
 
                 // Update checkboxes
                 document.getElementById('show_bounds').checked = config.show_bounds;
+                document.getElementById('invert_bounds').checked = config.invert_bounds || false;
                 document.getElementById('osc_enabled').checked = config.osc_enabled;
 
                 // Update text/number fields
@@ -881,7 +897,7 @@
             try {
                 const response = await fetch('/api/tracking');
                 const data = await response.json();
-                
+
                 const brightnessEl = document.getElementById('tracked-brightness');
                 const brightnessPanel = document.getElementById('brightness-panel');
                 if (brightnessEl && data.current_brightness !== undefined) {
@@ -899,32 +915,32 @@
                         brightnessPanel.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
                     }
                 }
-                
+
                 // Update tracking overlay (X, Y, Acceleration)
                 const trackingXEl = document.getElementById('tracking-x');
                 if (trackingXEl && data.current_x !== undefined) {
                     trackingXEl.innerText = data.current_x.toFixed(3);
                 }
-                
+
                 const trackingYEl = document.getElementById('tracking-y');
                 if (trackingYEl && data.current_y !== undefined) {
                     trackingYEl.innerText = data.current_y.toFixed(3);
                 }
-                
+
                 const trackingAccelEl = document.getElementById('tracking-accel');
                 if (trackingAccelEl && data.smoothed_accel !== undefined) {
                     trackingAccelEl.innerText = data.smoothed_accel.toFixed(3);
                 }
-                
+
                 const trackingAreaEl = document.getElementById('tracking-area');
                 if (trackingAreaEl && data.current_area !== undefined) {
                     trackingAreaEl.innerText = data.current_area.toFixed(0);
                 }
-                
+
                 const fpsEl = document.getElementById('fps');
                 if (fpsEl && data.fps !== undefined) {
                     fpsEl.innerText = data.fps;
-                    
+
                 }
             } catch (err) {
                 console.error("Failed to fetch tracking data:", err);

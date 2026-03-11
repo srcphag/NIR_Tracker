@@ -73,6 +73,8 @@ def set_config():
         parsed_config['osc_port'] = int(new_config['osc_port'])
     if 'show_bounds' in new_config:
         parsed_config['show_bounds'] = bool(new_config['show_bounds'])
+    if 'invert_bounds' in new_config:
+        parsed_config['invert_bounds'] = bool(new_config['invert_bounds'])
         
     # parse bounding box: list of 4 floats
     if 'bounding_box' in new_config:

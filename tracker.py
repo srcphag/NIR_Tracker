@@ -14,6 +14,7 @@ class BlobTracker:
         self.threshold_range = [200, 255]
         self.min_blob_size = 5
         self.bounding_box = [0.1, 0.0, 0.6, 1.0] # [x_min, y_min, x_max, y_max]
+        self.invert_bounds = False
         self.show_bounds = True
         self.preprocess_threshold = 20 # None = disabled
         self.smoothing_alpha = 0.05
@@ -93,6 +94,7 @@ class BlobTracker:
             "threshold_range": self.threshold_range,
             "min_blob_size": self.min_blob_size,
             "bounding_box": self.bounding_box,
+            "invert_bounds": getattr(self, "invert_bounds", False),
             "show_bounds": self.show_bounds,
             "preprocess_threshold": self.preprocess_threshold,
             "smoothing_alpha": self.smoothing_alpha,
@@ -169,10 +171,17 @@ class BlobTracker:
 
         if bounds is not None:
             x_min, y_min, x_max, y_max = bounds
-            mask = np.zeros_like(gray)
+            
+            if getattr(self, "invert_bounds", False):
+                mask = np.full_like(gray, 255)
+                fill_color = 0
+            else:
+                mask = np.zeros_like(gray)
+                fill_color = 255
+                
             pt1 = (int(x_min * w), int(y_min * h))
             pt2 = (int(x_max * w), int(y_max * h))
-            cv2.rectangle(mask, pt1, pt2, 255, -1)
+            cv2.rectangle(mask, pt1, pt2, fill_color, -1)
             gray = cv2.bitwise_and(gray, mask)
 
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(gray)

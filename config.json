@@ -11,6 +11,7 @@
         0.85,
         0.85
     ],
+    "invert_bounds": true,
     "show_bounds": true,
     "preprocess_threshold": null,
     "smoothing_alpha": 0.04,
@@ -19,6 +20,6 @@
     "osc_port": 9001,
     "osc_address": "/point",
     "status_msg": "Camera 'IR' not found. Check connection.",
-    "current_brightness": 255.0,
+    "current_brightness": 0.0,
     "fps": 0.0
 }
