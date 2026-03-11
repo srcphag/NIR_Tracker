@@ -384,6 +384,7 @@ class BlobTracker:
         else:
 
             self.prev_vel, self.smoothed_accel = (0.0, 0.0), 0.0
+            self.prev_vel = (0.0, 0.0)
             self.current_brightness = 0.0
             self.current_x = 0.0
             self.current_y = 0.0
@@ -394,7 +395,7 @@ class BlobTracker:
                     x_norm, y_norm = self.prev_pos if self.prev_pos else (0.0, 0.0)
                     self.osc_client.send_message(self.osc_address,
                                             [x_norm, y_norm, 0.0, self.smoothed_accel])
-                    self.osc_no_tracking_sent = True  # Set flag after sending
+                    self.osc_no_tracking_sent = False  # Set flag after sending
                 except Exception as e:
                     pass # Ignore OSC errors to not crash the tracking loop
             
